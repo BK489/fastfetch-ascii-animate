@@ -1023,7 +1023,7 @@ elseif(APPLE)
         src/detection/cpu/cpu_apple.c
         src/detection/cpucache/cpucache_apple.c
         src/detection/cpuusage/cpuusage_apple.c
-        src/detection/cursor/cursor_apple.m
+        src/detection/cursor/cursor_apple.c
         src/detection/disk/disk_bsd.c
         src/detection/dns/dns_apple.c
         src/detection/physicaldisk/physicaldisk_apple.c
@@ -1038,7 +1038,7 @@ elseif(APPLE)
         src/detection/lm/lm_nosupport.c
         src/detection/loadavg/loadavg_bsd.c
         src/detection/libc/libc_apple.c
-        src/detection/locale/locale_linux.c
+        src/detection/locale/locale_apple.c
         src/detection/localip/localip_linux.c
         src/detection/gamepad/gamepad_apple.c
         src/detection/media/media_apple.m
@@ -1064,7 +1064,7 @@ elseif(APPLE)
         src/detection/wifi/wifi_apple.m
         src/detection/wm/wm_apple.m
         src/detection/de/de_nosupport.c
-        src/detection/wmtheme/wmtheme_apple.m
+        src/detection/wmtheme/wmtheme_apple.c
         src/detection/camera/camera_apple.m
     )
     # CMAKE_SYSTEM_PROCESSOR has been normalized before
