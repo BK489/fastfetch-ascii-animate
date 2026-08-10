@@ -23,4 +23,6 @@ esac
 
 cmake --build . --target fastfetch "${cmake_build_args}"
 
+echo -e
+
 ./fastfetch "$@"
