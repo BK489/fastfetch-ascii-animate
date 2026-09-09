@@ -1,6 +1,9 @@
 #include "logo/logo.h"
+#include "common/FFlist.h"
+#include "common/FFstrbuf.h"
 #include "common/io.h"
 #include "common/printing.h"
+#include "common/debug.h"
 #include "common/processing.h"
 #include "common/textModifier.h"
 #include "common/strutil.h"
@@ -9,6 +12,8 @@
 #include "detection/terminalshell/terminalshell.h"
 
 #include <ctype.h>
+#include <dirent.h> //for reading animation frames directory
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -285,6 +290,10 @@ void ffLogoPrintChars(const char* data, bool doColorReplacement) {
     logoLineCacheClear(cache);
 }
 
+static int compareFileNames(const FFstrbuf* a, const FFstrbuf* b) {
+    return ffStrbufComp(a, b);
+}
+
 static void logoApplyColors(const FFlogo* logo, bool replacement) {
     if (instance.config.display.colorTitle.length == 0) {
         ffStrbufAppendS(&instance.config.display.colorTitle, logo->colorTitle ?: logo->colors[0]);
@@ -397,6 +406,70 @@ static const FFlogo* logoGetBuiltinDetected(FFLogoSize size) {
     }
 
     return &ffLogoUnknown;
+}
+
+void ffLogoPrintAnimateFrame(void) {
+    FFstate* state = &instance.state;
+    FFOptionsLogo* options = &instance.config.logo;
+
+    //lazy scan
+    if (!state->animateReady) { // open directory, collect filenames, sort, read files, set ready
+
+        FF_AUTO_CLOSE_DIR DIR* dir = opendir(options->source.chars);
+
+        if (!dir) { // if the directory doesn't exist,  log and run with normal logo
+            FF_DEBUG("opendir(\"%s\") failed: %s", options->source.chars, strerror(errno));
+            ffLogoPrintDetected(FF_LOGO_SIZE_NORMAL);
+            return;
+        }
+
+        FF_LIST_AUTO_DESTROY fileNames = ffListCreate();
+        struct dirent* entry; // grabs all .txt files ignores hidden appends them to file_list
+        while ((entry = readdir(dir))) {
+            if (entry->d_name[0] == '.') {
+                continue;
+            }
+
+            if (ffStrEndsWithIgnCase(entry->d_name, ".txt")) {
+                FFstrbuf* fileName = FF_LIST_ADD(FFstrbuf, fileNames);
+                ffStrbufInitS(fileName, entry->d_name);
+            }
+        }
+        //sort so we can name the frames numerical or alphabetical and they will play in order!
+        ffListSort(&fileNames, sizeof(FFstrbuf), (void*) compareFileNames);
+
+        FF_LIST_FOR_EACH(FFstrbuf, fileName, fileNames) {  //for each file, add them all to the animateFrames list
+            
+            FF_STRBUF_AUTO_DESTROY tempPath = ffStrbufCreateS(options->source.chars); //make correct path
+            ffStrbufEnsureEndsWithC(&tempPath, '/');
+            ffStrbufAppendS(&tempPath, fileName->chars);
+
+            FFstrbuf* slot = FF_LIST_ADD(FFstrbuf, state->animateFrames);
+            ffStrbufInit(slot);                              
+            ffAppendFileBuffer(tempPath.chars, slot);   //add txt file contents to animate slot
+        }
+
+        state->animateReady = true;
+
+        if (state->animateFrames.length == 0) {
+            ffLogoPrintDetected(FF_LOGO_SIZE_NORMAL);
+            return;
+        }
+
+    }
+
+    // PHASE 2: SELECT
+    FFstrbuf* frame = FF_LIST_GET(FFstrbuf, state->animateFrames, state->animateIndex);
+
+    // PHASE 3: RENDER
+    logoApplyColors(logoGetBuiltinDetected(FF_LOGO_SIZE_NORMAL), true);
+    ffLogoPrintChars(frame->chars, true);
+
+    // PHASE 4: ADVANCE
+    if (options->animateShuffle)
+        state->animateIndex = (uint32_t) (rand() % (int) state->animateFrames.length);
+    else
+        state->animateIndex = (state->animateIndex + 1) % state->animateFrames.length;
 }
 
 static void logoPrintStruct(const FFlogo* logo) {

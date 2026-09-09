@@ -10,6 +10,7 @@ typedef enum FFLogoType: uint8_t {
     FF_LOGO_TYPE_BUILTIN,            // builtin ascii art
     FF_LOGO_TYPE_SMALL,              // builtin ascii art, small version
     FF_LOGO_TYPE_FILE,               // text file, printed with color code replacement
+    FF_LOGO_TYPE_ANIMATE,            // * `--logo animate` animate option *
     FF_LOGO_TYPE_FILE_RAW,           // text file, printed as is
     FF_LOGO_TYPE_DATA,               // text data, printed with color code replacement
     FF_LOGO_TYPE_DATA_RAW,           // text data, printed as is
@@ -44,6 +45,7 @@ typedef struct FFOptionsLogo {
     bool printRemaining;
     bool preserveAspectRatio;
     bool recache;
+    bool animateShuffle;
 
 #if FF_HAVE_CHAFA
     bool chafaFgOnly;

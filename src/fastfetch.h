@@ -35,6 +35,10 @@ typedef struct FFstate {
     uint32_t dynamicInterval;
     FFPlatform platform;
     FFLogoLineCacheState logoLineCache;
+    //animate stuff
+    FFlist animateFrames;
+    uint32_t animateIndex;
+    bool animateReady;
 } FFstate;
 
 typedef struct FFinstance {

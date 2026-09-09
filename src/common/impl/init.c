@@ -1,3 +1,5 @@
+#include "common/FFlist.h"
+#include "common/FFstrbuf.h"
 #include "fastfetch.h"
 #include "common/init.h"
 #include "common/parsing.h"
@@ -6,6 +8,8 @@
 #include "common/strutil.h"
 #include "detection/displayserver/displayserver.h"
 #include "logo/logo.h"
+#include <stdlib.h>
+#include <time.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -30,6 +34,11 @@ static void initState(FFstate* state) {
 
     ffPlatformInit(&state->platform);
     state->dynamicInterval = 0;
+
+    state->animateIndex = 0;
+    state->animateReady = false;
+    ffListInit(&state->animateFrames);
+    srand((unsigned) time(NULL));
 }
 
 static void defaultConfig(void) {
@@ -168,6 +177,11 @@ static void destroyConfig(void) {
 
 static void destroyState(void) {
     ffPlatformDestroy(&instance.state.platform);
+    
+    FF_LIST_FOR_EACH(FFstrbuf, frame, instance.state.animateFrames) {
+        ffStrbufDestroy(frame);
+    }
+    ffListDestroy(&instance.state.animateFrames);
 }
 
 void ffDestroyInstance(void) {

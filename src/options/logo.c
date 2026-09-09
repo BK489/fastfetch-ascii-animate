@@ -18,6 +18,7 @@ void ffOptionsInitLogo(FFOptionsLogo* options) {
     options->printRemaining = true;
     options->preserveAspectRatio = false;
     options->recache = false;
+    options->animateShuffle = false;
     options->position = FF_LOGO_POSITION_LEFT;
 
 #if FF_HAVE_CHAFA
@@ -56,6 +57,7 @@ bool ffOptionsParseLogoCommandLine(FFOptionsLogo* options, const char* key, cons
                                                                            { "builtin", FF_LOGO_TYPE_BUILTIN },
                                                                            { "small", FF_LOGO_TYPE_SMALL },
                                                                            { "file", FF_LOGO_TYPE_FILE },
+                                                                           { "animate", FF_LOGO_TYPE_ANIMATE },
                                                                            { "file-raw", FF_LOGO_TYPE_FILE_RAW },
                                                                            { "data", FF_LOGO_TYPE_DATA },
                                                                            { "data-raw", FF_LOGO_TYPE_DATA_RAW },
@@ -107,6 +109,8 @@ bool ffOptionsParseLogoCommandLine(FFOptionsLogo* options, const char* key, cons
             options->preserveAspectRatio = ffOptionParseBoolean(value);
         } else if (ffStrEqualsIgnCase(subKey, "recache")) {
             options->recache = ffOptionParseBoolean(value);
+        } else if (ffStrEqualsIgnCase(subKey, "shuffle")) {
+            options->animateShuffle = ffOptionParseBoolean(value);
         } else if (ffStrEqualsIgnCase(subKey, "separate")) {
             fputs("--logo-separate has been renamed to --logo-position\n", stderr);
             exit(477);
@@ -250,6 +254,7 @@ const char* ffOptionsParseLogoJsonConfig(FFOptionsLogo* options, yyjson_val* roo
                                                                        { "builtin", FF_LOGO_TYPE_BUILTIN },
                                                                        { "small", FF_LOGO_TYPE_SMALL },
                                                                        { "file", FF_LOGO_TYPE_FILE },
+                                                                       { "animate", FF_LOGO_TYPE_ANIMATE },
                                                                        { "file-raw", FF_LOGO_TYPE_FILE_RAW },
                                                                        { "data", FF_LOGO_TYPE_DATA },
                                                                        { "data-raw", FF_LOGO_TYPE_DATA_RAW },
@@ -337,6 +342,9 @@ const char* ffOptionsParseLogoJsonConfig(FFOptionsLogo* options, yyjson_val* roo
             continue;
         } else if (unsafe_yyjson_equals_str(key, "recache")) {
             options->recache = yyjson_get_bool(val);
+            continue;
+        } else if (unsafe_yyjson_equals_str(key, "shuffle")) {
+            options->animateShuffle = yyjson_get_bool(val);
             continue;
         } else if (unsafe_yyjson_equals_str(key, "position")) {
             int value;
@@ -447,6 +455,9 @@ void ffOptionsGenerateLogoJsonConfig(FFdata* data, FFOptionsLogo* options) {
             break;
         case FF_LOGO_TYPE_FILE:
             yyjson_mut_obj_add_str(doc, obj, "type", "file");
+            break;
+        case FF_LOGO_TYPE_ANIMATE:
+            yyjson_mut_obj_add_str(doc, obj, "type", "animate");
             break;
         case FF_LOGO_TYPE_FILE_RAW:
             yyjson_mut_obj_add_str(doc, obj, "type", "file-raw");

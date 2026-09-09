@@ -11,6 +11,7 @@
 #include "common/strutil.h"
 #include "common/mallocHelper.h"
 #include "fastfetch_datatext.h"
+#include "options/logo.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -791,7 +792,11 @@ static void run(FFdata* data) {
     ffStart();
 
     if (!data->resultDoc) {
-        ffLogoPrint();
+        if (instance.config.logo.type == FF_LOGO_TYPE_ANIMATE) {
+            ffLogoPrintAnimateFrame();
+        } else {
+            ffLogoPrint();
+        }
     }
 
 #if defined(_WIN32)
@@ -814,6 +819,10 @@ static void run(FFdata* data) {
             ffTimeSleep(instance.state.dynamicInterval);
             fputs("\e[H", stdout); // Move cursor to the top left corner to overwrite the previous output
             instance.state.keysHeight = 0; // Reset keysHeight so `ffLogoPrintRemaining` will recalculate it
+
+            if (instance.config.logo.type == FF_LOGO_TYPE_ANIMATE) {
+                ffLogoPrintAnimateFrame();
+            }
         } else {
             break;
         }
