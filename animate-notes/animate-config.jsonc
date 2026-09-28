@@ -1,5 +1,5 @@
-// Animated skull config — full module set to push logo lines through
-// the protected ffLogoPrintLine path (hides smudge until we fix it)
+// Animated skull config — boxed category layout
+//
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
     "logo": {
@@ -11,136 +11,197 @@
             "2": "green"
         }
     },
+    // ── Loading bars ────────────────────────────────────────────────────────
+    // The bar engine: defines how {percentage-bar} / {size-percentage-bar}
+    // render inside a module's format string. Both halves must be present —
+    // this block alone shows nothing until a module format invokes the bar.
     "display": {
-        "separator": " → "
+        "bar": {
+            "border": {
+                "left": "",
+                "right": ""
+            },
+            "char": {
+                "elapsed": "󰄮",
+                "total": ""
+            },
+            "width": 10
+        },
+        "percent": {
+            "type": 2,
+            "color": {
+                "green": "yellow",
+                "yellow": "cyan"
+            },
+            "ndigits": 2
+        }
     },
     "modules": [
         "title",
-        "separator",
-        {
-            "type": "os",
-            "key": "OS",
-            "keyColor": "yellow"
-        },
-        {
-            "type": "kernel",
-            "key": "├",
-            "keyColor": "yellow"
-        },
-        {
-            "type": "uptime",
-            "key": "├",
-            "keyColor": "yellow"
-        },
-        {
-            "type": "packages",
-            "key": "├",
-            "keyColor": "yellow"
-        },
-        {
-            "type": "shell",
-            "key": "└",
-            "keyColor": "yellow"
-        },
         "break",
+
+        // ── Hardware ─────────────────────────────────────────────────────────
         {
-            "type": "wm",
-            "key": "DE/WM",
-            "keyColor": "blue"
+            "type": "custom",
+            "format": "\u001b[31m┌─󰫢─────────────────────Hardware───────────────────󰫢─┐\u001b[0m"
         },
-        {
-            "type": "lm",
-            "key": "├",
-            "keyColor": "blue"
-        },
-        {
-            "type": "wmtheme",
-            "key": "├",
-            "keyColor": "blue"
-        },
-        {
-            "type": "icons",
-            "key": "├",
-            "keyColor": "blue"
-        },
-        {
-            "type": "terminal",
-            "key": "├",
-            "keyColor": "blue"
-        },
-        {
-            "type": "terminalfont",
-            "key": "├",
-            "keyColor": "blue"
-        },
-        {
-            "type": "wallpaper",
-            "key": "└",
-            "keyColor": "blue"
-        },
-        "break",
         {
             "type": "host",
-            "key": "PC",
-            "keyColor": "green"
+            "key": "󰌢 PC",
+            "keyColor": "red"
         },
         {
             "type": "cpu",
-            "key": "├",
-            "keyColor": "green"
+            "key": "│ ├ 󰍛",
+            "keyColor": "red",
+            "temp": true
         },
         {
             "type": "gpu",
-            "key": "├",
-            "keyColor": "green"
-        },
-        {
-            "type": "disk",
-            "key": "├",
-            "keyColor": "green"
+            "key": "│ ├ 󰢮",
+            "keyColor": "red",
+            "driverSpecific": true
         },
         {
             "type": "memory",
-            "key": "├",
-            "keyColor": "green"
+            "key": "│ ├ 󰑯",
+            "keyColor": "red",
+            "format": "{used} / {total} {percentage-bar}"
+        },
+        {
+            "type": "disk",
+            "key": "│ ├ 󰋊",
+            "keyColor": "red",
+            "format": "{size-used} / {size-total} {size-percentage-bar}"
         },
         {
             "type": "swap",
-            "key": "├",
-            "keyColor": "green"
+            "key": "│ ├ 󰁹 Swap",
+            "keyColor": "red",
+            "format": "{used} / {total} {percentage-bar}"
         },
         {
             "type": "display",
-            "key": "├",
-            "keyColor": "green"
+            "key": "│ ├ 󰍹 Display",
+            "keyColor": "red"
         },
         {
             "type": "battery",
-            "key": "├",
+            "key": "└ └ 󰁺",
+            "keyColor": "red"
+        },
+        {
+            "type": "custom",
+            "format": "\u001b[31m└─󰫢────────────────────────────────────────────────󰫢─┘\u001b[0m"
+        },
+        "break",
+
+        // ── Software ─────────────────────────────────────────────────────────
+        {
+            "type": "custom",
+            "format": "\u001b[32m┌─󰫢────────────────────Software───────────────────󰫢─┐\u001b[0m"
+        },
+        {
+            "type": "users",
+            "key": "󰈉 User",
+            "keyColor": "green",
+            "myselfOnly": true
+        },
+        {
+            "type": "os",
+            "key": "│ ├ 󰣇 OS",
             "keyColor": "green"
+        },
+        {
+            "type": "kernel",
+            "key": "│ ├ 󰒋",
+            "keyColor": "green"
+        },
+        {
+            "type": "packages",
+            "key": "│ ├ 󰏖",
+            "keyColor": "green"
+        },
+        {
+            "type": "wm",
+            "key": "│ ├ 󰧨 WM",
+            "keyColor": "green"
+        },
+        {
+            "type": "terminal",
+            "key": "│ ├ 󰆍",
+            "keyColor": "green"
+        },
+        {
+            "type": "terminalfont",
+            "key": "│ ├ 󰊀 TermFont",
+            "keyColor": "green"
+        },
+        {
+            "type": "shell",
+            "key": "└ └ 󰇍",
+            "keyColor": "green"
+        },
+        {
+            "type": "custom",
+            "format": "\u001b[32m└─󰫢───────────────────────────────────────────────󰫢─┘\u001b[0m"
+        },
+        "break",
+
+        // ── Media & Misc ─────────────────────────────────────────────────────
+        {
+            "type": "custom",
+            "format": "\u001b[35m┌─󰫢──────────────────Media & Misc──────────────────󰫢─┐\u001b[0m"
         },
         {
             "type": "uptime",
-            "key": "└",
-            "keyColor": "green"
+            "key": "󰅐 MISC",
+            "keyColor": "magenta"
         },
-        "break",
         {
             "type": "sound",
-            "key": "SOUND",
-            "keyColor": "cyan"
+            "key": "│ ├ 󰕿 Sound",
+            "keyColor": "magenta",
+            "percent": {
+                "type": 9
+            }
         },
         {
             "type": "player",
-            "key": "├",
-            "keyColor": "cyan"
+            "key": "│ ├ 󰝚 Player",
+            "keyColor": "magenta"
         },
         {
             "type": "media",
-            "key": "└",
-            "keyColor": "cyan"
+            "key": "│ ├ 󰝚",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "command",
+            "key": "│ ├ 󰅼 OS Age",
+            "keyColor": "magenta",
+            "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); Days_difference=$((time_progression / 86400)); echo $Days_difference Days",
+            "format": "{result}"
+        },
+        {
+            "type": "datetime",
+            "key": "│ ├ 󰃭",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "locale",
+            "key": "└ └ 󰒋",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "custom",
+            "format": "\u001b[35m└─󰫢────────────────────────────────────────────────󰫢─┘\u001b[0m"
         },
         "break",
-        "colors"
+
+        {
+            "type": "colors",
+            "symbol": "star"
+        }
     ]
 }
