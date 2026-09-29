@@ -16,3 +16,6 @@ fastfetch.kdev4
 /*.zh.md
 /.*-ai/
 .clangd
+/.work*
+/doc/*.md
+/fastfetch.wiki

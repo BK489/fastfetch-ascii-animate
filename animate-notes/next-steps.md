@@ -53,6 +53,19 @@ Things to consider:
 - **Path expansion** — verify `~` and env vars work in `"source"` from JSON
   the same way `--logo` handles them on CLI. Both flow through
   `options->source` so it likely works, but untested.
+- **Naming-convention separation** — upstream now has its own "animation"
+  concept (`animationFrame`, `FF_LOGO_ANIMATION_FRAME_*`) for selecting
+  frames inside a single image file (GIF/APNG), living entirely in
+  `src/logo/image/image.c`. Our feature animates a *directory of `.txt`
+  files* and lives in `src/logo/logo.c`. The two never share code, but they
+  share the word "animate" — which is a readability trap. Audit our
+  identifiers (`FF_LOGO_TYPE_ANIMATE`, `animateShuffle`, `animateFrames`,
+  `animateIndex`, `animateReady`, `ffLogoPrintAnimateFrame`) and find a
+  naming convention that makes the boundary obvious at a glance — e.g. a
+  consistent prefix or suffix that distinguishes "text-frame cycling" from
+  upstream's "image-frame selection." Start by surveying every symbol we
+  added and grouping it, so the rename is one coherent pass, not a
+  scatter of individual edits.
 
 ---
 
