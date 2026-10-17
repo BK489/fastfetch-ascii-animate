@@ -104,11 +104,11 @@ typedef enum FFSoundAndroidUsage : int32_t {
 #define FF_SOUND_ANDROID_NAME_REPLY_SIZE 512
 
 // `AudioDeviceInfo.TYPE_*`, as the test device's own dex declares them (read out of
-// `Landroid/media/AudioDeviceInfo;`). The value is what `AudioDeviceAttributes.type` carries in the
-// reply; the names are the AOSP constant names without the prefix, which is what goes into
-// `identifier`, and a spelled out name, which is what the module prints. An unrecognised value is
-// reported rather than guessed at: a vendor is free to add types, and a wrong name is worse than
-// "Unknown Device".
+// `Landroid/media/AudioDeviceInfo;` -- most recently on Android 17, which had added four). The
+// value is what `AudioDeviceAttributes.type` carries in the reply; the names are the AOSP constant
+// names without the prefix, which is what goes into `identifier`, and a spelled out name, which is
+// what the module prints. An unrecognised value is reported rather than guessed at: a vendor is
+// free to add types, and a wrong name is worse than "Unknown Device".
 typedef enum FFSoundAndroidDeviceType : int32_t {
     FF_SOUND_ANDROID_TYPE_UNKNOWN = 0,
     FF_SOUND_ANDROID_TYPE_BUILTIN_EARPIECE = 1,
@@ -143,6 +143,11 @@ typedef enum FFSoundAndroidDeviceType : int32_t {
     FF_SOUND_ANDROID_TYPE_BLE_BROADCAST = 30,
     FF_SOUND_ANDROID_TYPE_DOCK_ANALOG = 31,
     FF_SOUND_ANDROID_TYPE_MULTICHANNEL_GROUP = 32,
+    FF_SOUND_ANDROID_TYPE_BLE_HEARING_AID = 33,
+    FF_SOUND_ANDROID_TYPE_BLE_CENTRAL = 34,
+    FF_SOUND_ANDROID_TYPE_BLE_CENTRAL_BROADCAST = 35,
+    // 36 to 79 have no constant in the Android 17 release, and 80 is the highest it declares.
+    FF_SOUND_ANDROID_TYPE_PROXY = 80,
 } FFSoundAndroidDeviceType;
 
 typedef struct FFSoundAndroidDeviceName {
@@ -185,6 +190,10 @@ static const FFSoundAndroidDeviceName FF_SOUND_ANDROID_DEVICE_NAMES[] = {
     { FF_SOUND_ANDROID_TYPE_BLE_BROADCAST, "BLE_BROADCAST", "Bluetooth LE Broadcast" },
     { FF_SOUND_ANDROID_TYPE_DOCK_ANALOG, "DOCK_ANALOG", "Dock (Analog)" },
     { FF_SOUND_ANDROID_TYPE_MULTICHANNEL_GROUP, "MULTICHANNEL_GROUP", "Multichannel Group" },
+    { FF_SOUND_ANDROID_TYPE_BLE_HEARING_AID, "BLE_HEARING_AID", "Bluetooth LE Hearing Aid" },
+    { FF_SOUND_ANDROID_TYPE_BLE_CENTRAL, "BLE_CENTRAL", "Bluetooth LE Central" },
+    { FF_SOUND_ANDROID_TYPE_BLE_CENTRAL_BROADCAST, "BLE_CENTRAL_BROADCAST", "Bluetooth LE Central Broadcast" },
+    { FF_SOUND_ANDROID_TYPE_PROXY, "PROXY", "Proxy" },
 };
 
 static const FFSoundAndroidDeviceName* soundAndroidDeviceName(int32_t type) {
@@ -199,12 +208,16 @@ static const FFSoundAndroidDeviceName* soundAndroidDeviceName(int32_t type) {
 // The types that stand for a Bluetooth device. They are the ones whose own name is worth asking the
 // service for: everything else is described well enough by its type, and the request is one more
 // round trip to system_server. A hearing aid is on the list because it is a Bluetooth LE link with
-// a name of its own, the same as a headset.
+// a name of its own, the same as a headset. The other three types Android 17 added stay off it:
+// BLE_CENTRAL and BLE_CENTRAL_BROADCAST name an audio path inside this device while it operates in
+// a Bluetooth peripheral mode rather than a device on the far end of a link, and PROXY is a logical
+// endpoint rather than a link at all.
 static bool soundAndroidIsBluetooth(int32_t type) {
     switch ((FFSoundAndroidDeviceType) type) {
         case FF_SOUND_ANDROID_TYPE_BLUETOOTH_SCO:
         case FF_SOUND_ANDROID_TYPE_BLUETOOTH_A2DP:
         case FF_SOUND_ANDROID_TYPE_HEARING_AID:
+        case FF_SOUND_ANDROID_TYPE_BLE_HEARING_AID:
         case FF_SOUND_ANDROID_TYPE_BLE_HEADSET:
         case FF_SOUND_ANDROID_TYPE_BLE_SPEAKER:
         case FF_SOUND_ANDROID_TYPE_BLE_BROADCAST:
@@ -259,6 +272,7 @@ static const char* soundAndroidResolveCodes(FFSoundAndroidCodes* codes) {
         return error;
     }
     if (soundAndroidCodesIncomplete(codes)) {
+        FF_DEBUG("The audio service does not declare every method this module calls");
         return "The audio service does not declare every method this module calls";
     }
     return nullptr;
@@ -271,6 +285,7 @@ static const char* soundAndroidResolveCodes(FFSoundAndroidCodes* codes) {
 // release build compiles out -- hence the attribute.
 static const char* soundAndroidCallInt(FFBinder* binder, uint32_t handle, [[maybe_unused]] const char* transactionField, int32_t transaction, bool hasArgument, int32_t argument, int32_t* result) {
     if (transaction == FF_DEX_STATIC_INT_UNRESOLVED) {
+        FF_DEBUG("The audio service does not declare that method");
         return "The audio service does not declare that method";
     }
 
@@ -374,6 +389,7 @@ static bool soundAndroidReadString16(const uint8_t* data, size_t size, size_t of
 // is taken from it.
 static const char* soundAndroidCallBtName(FFBinder* binder, uint32_t handle, int32_t transaction, FFstrbuf* result) {
     if (transaction == FF_DEX_STATIC_INT_UNRESOLVED) {
+        FF_DEBUG("The audio service does not declare getBtActiveDeviceName");
         return "The audio service does not declare getBtActiveDeviceName";
     }
 
@@ -397,6 +413,7 @@ static const char* soundAndroidCallBtName(FFBinder* binder, uint32_t handle, int
         return "The audio service raised an exception";
     }
     if (!soundAndroidReadString16(reply.data, reply.size, sizeof(int32_t), result)) {
+        FF_DEBUG("The audio service answered a truncated device name");
         return "The audio service answered a truncated device name";
     }
     FF_DEBUG("\"%s\" is transaction %d and answered \"%s\"", FF_SOUND_ANDROID_GET_BT_ACTIVE_DEVICE_NAME, transaction,
@@ -573,6 +590,7 @@ static const char* detectNative(FFSoundOptions* options, FFlist* devices) {
     }
 
     if (name == nullptr) {
+        FF_DEBUG("The audio service selected no output device");
         return "The audio service selected no output device";
     }
 
